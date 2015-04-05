@@ -1,0 +1,12 @@
+{
+  "name": "Meteor",
+  "main": "server/app.js",
+  "dependencies": {
+    "express": "latest",
+    "jade": "latest",
+    "socket.io": "latest",
+    "compression": "latest",
+    "sqlite3": "latest",
+    "async": "latest"
+  }
+}

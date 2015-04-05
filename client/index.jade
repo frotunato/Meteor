@@ -1,0 +1,163 @@
+html
+  head
+    title Meteor
+    link(rel="stylesheet" href="c3-master/c3.min.css")
+    style.
+      body {
+        background-image: url("congruent_outline.png");
+        color: gainsboro;
+      }
+      #tContainer {
+        font-family: Optima,Segoe,"Segoe UI",Candara,Calibri,Arial,sans-serif;
+        font-size: 40px;
+        font-weight: 300;
+      }
+      #hContainer {
+        font-size: 30px;
+        font-weight: 300;
+        font-family: Optima,Segoe,"Segoe UI",Candara,Calibri,Arial,sans-serif;
+      }
+    script(src="c3-master/d3.min.js")
+    script(src="/socket.io/socket.io.js")
+    script(src="c3-master/c3.js")
+    script.
+      document.addEventListener('DOMContentLoaded', function (event) {
+        var socket = io();
+
+        var chartData = {
+          hourly: [],
+          halfDay: [],
+          fullDay: []
+        };
+
+        var hourlyChart = c3.generate({
+          bindto: '#hourlyChart',
+          data: {
+            x: 'timestamp',
+            json: chartData.hourly,
+            keys: {
+              x: 'timestamp',
+              value: ['temperature', 'humidity']
+            },
+            axes: {
+              temperature: 'y',
+              humidity: 'y2'
+            }
+          },
+          axis: {
+            x: {
+              type: 'timeseries',
+              tick: {format: '%H:%M:%S'}
+            },
+            y2: {
+              show: true
+            }
+          }
+        });
+      
+        var halfDayChart = c3.generate({
+          bindto: '#halfDayChart',
+          data: {
+            x: 'timestamp',
+            json: chartData.halfDay,
+            keys: {
+              x: 'timestamp',
+              value: ['temperature', 'humidity']
+            },
+            axes: {
+              temperature: 'y',
+              humidity: 'y2'
+            }
+          },
+          axis: {
+            x: {
+              type: 'timeseries',
+              tick: {format: '%H:%M'}
+            },
+            y2: {
+              show: true
+            },
+          }
+        });
+
+        var fullDayChart = c3.generate({
+          bindto: '#fullDayChart',
+          data: {
+            x: 'timestamp',
+            json: chartData.fullDay,
+            keys: {
+              x: 'timestamp',
+              value: ['temperature', 'humidity']
+            },
+            axes: {
+              temperature: 'y',
+              humidity: 'y2'
+            } 
+          },
+          axis: {
+            x: {
+              type: 'timeseries',
+              tick: {format: '%H:%M'}
+            },
+            y2: {
+              show: true
+            },
+          }
+        });
+      
+        function replaceValues (values) {
+          document.getElementById('tContainer').innerHTML = 'Temperature: ' + values.temperature + ' ºC';
+          document.getElementById('hContainer').innerHTML = 'Humidity: ' + values.humidity + ' %';
+          document.getElementById('sDelay').innerHTML = 'Sensor internal delay: ' + values.delay + ' ms';
+          document.getElementById('tDelay').innerHTML = 'Measure delay: ' + (Date.now() - Math.round(values.timestamp)) + " ms";
+        }
+  
+        function updateChart (chart, target, data, loadMode) {
+          if (!loadMode) {
+            chartData[target].splice(0, 1) && chartData[target].push(data);
+          } else {
+            chartData[target] = data[target];
+          }
+          chart.load({
+            x: 'timestamp',
+            json: chartData[target],
+            keys: {
+              x: 'timestamp',
+              value: ['temperature', 'humidity']
+            }
+          });
+        }
+
+        socket.on('th', function (data) {
+          replaceValues(data);
+        });
+
+        socket.on('hourly_update', function (data) { 
+          updateChart(hourlyChart, 'hourly', data);
+        });
+
+        socket.on('halfDay_update', function (data) {
+          updateChart(halfDayChart, 'halfDay', data);
+        });
+
+        socket.on('fullDay_update', function (data) {
+         updateChart(fullDayChart, 'halfDay', data);
+        });
+        
+        socket.on('pull', function (data) {
+          updateChart(hourlyChart, 'hourly', data, true);
+          updateChart(halfDayChart, 'halfDay', data, true);
+          updateChart(fullDayChart, 'fullDay', data, true);
+        });
+      });
+
+  body
+    div(id="hourlyChart")
+    div(id="halfDayChart")
+    div(id="fullDayChart")
+    div(id="thWrapper")
+      p(id="tContainer") A
+      p(id="hContainer") B
+      div(id="delayInfo")
+        p(id="sDelay") C
+        p(id="tDelay") D
