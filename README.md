@@ -1,4 +1,1 @@
-MEANcraft
-===========
-
-Minecraft webadmin
+Meteor - A lightweight webapp for real time data monitoring. 
