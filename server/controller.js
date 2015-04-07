@@ -109,12 +109,14 @@ module.exports = function (io, db) {
           if (Date.now() - cache.hourly.time >= 60000) {
             query(1, function (err, rows) {
               response.hourly = rows;
+              console.log(rows)
               cache.hourly = {time: Date.now(), data: rows};
             });
           } else {
             response.hourly = cache.hourly.data;
             console.log('hourly from cache');
           }
+          last.hourlyUpdate = Date.now();
           cb(null);
         },
         function (cb) {
@@ -127,6 +129,7 @@ module.exports = function (io, db) {
             response.halfDay = cache.halfDay.data;
             console.log('half day from cache');
           }
+          last.halfDayUpdate = Date.now();
           cb(null);
         },
         function (cb) {
@@ -139,6 +142,7 @@ module.exports = function (io, db) {
             response.fullDay = cache.fullDay.data;
             console.log('full day from cache');
           }
+          last.fullDayUpdate = Date.now();
           cb(null);
         }
       ], function () {
